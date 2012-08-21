@@ -14,37 +14,38 @@ int main(int argc, char **argv){
 	Mat A;
 	KSP ksp;
 
+	PetscPrintf(PETSC_COMM_WORLD,"]> Initializing PETSc/SLEPc\n");
 	ierr=PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);CHKERRQ(ierr);
 	
-	PetscPrintf(PETSC_COMM_WORLD,"]> Initializing PETSc/SLEPc\n");
-
+	/*Load data*/
 	ierr=loadInputs(&A,&b,&x);CHKERRQ(ierr);
 	PetscPrintf(PETSC_COMM_WORLD,"]> Data loaded\n");
 
-
-
+	/*Create the KSP context and setup*/
 	ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);	
 	ierr = KSPSetType(ksp,KSPFGMRES);CHKERRQ(ierr);	
-
 	ierr = KSPSetOperators(ksp,A,A,DIFFERENT_NONZERO_PATTERN);CHKERRQ(ierr);	
 	ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);	
 	ierr = KSPSetUp(ksp);CHKERRQ(ierr);	
 	PetscPrintf(PETSC_COMM_WORLD,"]> Krylov Solver settings done\n");
 
-
+	/*Solve the system*/
+	PetscPrintf(PETSC_COMM_WORLD,"]> Krylov Solver Launching solving process\n");
 	ierr = KSPSolve(ksp, b, x); CHKERRQ(ierr);
+	PetscPrintf(PETSC_COMM_WORLD,"]> Krylov Solver System solved\n");
 
+	/*Clean*/
 	ierr = KSPDestroy(&ksp);CHKERRQ(ierr);
 	ierr = VecDestroy(&b);CHKERRQ(ierr);
 	ierr = VecDestroy(&x);CHKERRQ(ierr);
 	ierr = MatDestroy(&A);CHKERRQ(ierr);
+	PetscPrintf(PETSC_COMM_WORLD,"]> Cleaned structures, finalizing\n");
 
-
-	PetscFinalize(); //finalize petsc
+	/*Finalize PETSc*/
+	PetscFinalize(); 
 
 	return 0;
 }
-
 
 
 PetscErrorCode loadInputs(Mat * A, Vec * b, Vec * x){
@@ -58,17 +59,16 @@ PetscErrorCode loadInputs(Mat * A, Vec * b, Vec * x){
 	ierr=loadVector(bfile,b);CHKERRQ(ierr);
 	if(b==NULL) {
 		ierr=MatGetSize(*A,&sizex,&sizey);CHKERRQ(ierr);
-		ierr=generateVectorNorm(sizex,b);CHKERRQ(ierr);
+		ierr=generateVectorRandom(sizex,b);CHKERRQ(ierr);
 	}
 	ierr=loadVector(xfile,x);CHKERRQ(ierr);
 	if(x==NULL) {
 		ierr=MatGetSize(*A,&sizex,&sizey);CHKERRQ(ierr);
-		ierr=generateVectorNorm(sizex,x);CHKERRQ(ierr);
+		ierr=generateVectorRandom(sizex,x);CHKERRQ(ierr);
 	}
 
 	return 0;
 }
-
 
 
 PetscErrorCode loadMatrix(Mat * A){
@@ -134,6 +134,7 @@ PetscErrorCode generateVectorRandom(int size, Vec * v){
 
 	return 0;
 }
+
 
 PetscErrorCode generateVectorNorm(int size, Vec * v){
 	PetscScalar scal;
