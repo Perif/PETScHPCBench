@@ -14,8 +14,8 @@ int main(int argc, char **argv){
 	Mat A;
 	KSP ksp;
 
-	PetscPrintf(PETSC_COMM_WORLD,"]> Initializing PETSc/SLEPc\n");
 	ierr=PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);CHKERRQ(ierr);
+	PetscPrintf(PETSC_COMM_WORLD,"]> Initializing PETSc/SLEPc\n");
 	
 	/*Load data*/
 	ierr=loadInputs(&A,&b,&x);CHKERRQ(ierr);
