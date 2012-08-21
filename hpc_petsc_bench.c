@@ -57,12 +57,14 @@ PetscErrorCode loadInputs(Mat * A, Vec * b, Vec * x){
 	//load data files
 	ierr=loadMatrix(A);CHKERRQ(ierr);
 	ierr=loadVector(bfile,b);CHKERRQ(ierr);
-	if(b==NULL) {
+	if(*b==NULL) {
+		PetscPrintf(PETSC_COMM_WORLD,"]> Creating vector b\n");
 		ierr=MatGetSize(*A,&sizex,&sizey);CHKERRQ(ierr);
 		ierr=generateVectorRandom(sizex,b);CHKERRQ(ierr);
 	}
 	ierr=loadVector(xfile,x);CHKERRQ(ierr);
-	if(x==NULL) {
+	if(*x==NULL) {
+		PetscPrintf(PETSC_COMM_WORLD,"]> Creating vector x\n");
 		ierr=MatGetSize(*A,&sizex,&sizey);CHKERRQ(ierr);
 		ierr=generateVectorRandom(sizex,x);CHKERRQ(ierr);
 	}
@@ -88,6 +90,10 @@ PetscErrorCode loadMatrix(Mat * A){
 
 	/* read matrix file */
 	PetscPrintf(PETSC_COMM_WORLD,"Loading Matrix : %s\n",file);
+
+	ierr=MatCreate(PETSC_COMM_WORLD,A);CHKERRQ(ierr);
+	ierr=MatSetType(*A,MATAIJ);CHKERRQ(ierr);
+
 	ierr=PetscViewerBinaryOpen(PETSC_COMM_WORLD,file,FILE_MODE_READ,&fd);CHKERRQ(ierr);
 	ierr=MatLoad(*A,fd);CHKERRQ(ierr);
 	ierr=PetscViewerDestroy(&fd);CHKERRQ(ierr);
@@ -109,8 +115,8 @@ PetscErrorCode loadVector(char * type_v,Vec * b){
 	// check if there is a vec file, vector is not mandatory
 	ierr=PetscOptionsGetString(PETSC_NULL,type_v,file,PETSC_MAX_PATH_LEN-1,&flag);CHKERRQ(ierr);
 	if (!flag) {		
-		sprintf(err,"Error : %s is not properly set\n",type_v);
-		b = NULL;
+		PetscPrintf(PETSC_COMM_WORLD,"Error : %s is not properly set\n",type_v);
+		*b = NULL;
 	}else{
 		PetscPrintf(PETSC_COMM_WORLD,"Loading Vector : %s\n",file);
 		ierr=PetscViewerBinaryOpen(PETSC_COMM_WORLD,file,FILE_MODE_READ,&fd);CHKERRQ(ierr);
